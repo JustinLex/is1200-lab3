@@ -46,11 +46,11 @@ void labwork( void )
   if(getbtns)
   {
       if((getbtns&0x4))
-      mytime=(mytime&0xf0ff)|(getsw<<8);
+      mytime=(mytime&0xf0ff)|(getsw<<8); //change the first digit to the switches input (in binary) X6:42
       if((getbtns&0x2))
-      mytime=(mytime&0xf0ff)|(getsw<<4);
+      mytime=(mytime&0xf0ff)|(getsw<<4); //change the second digit to the switches input (in binary) 1X:42
       if((getbtns&0x1))
-      mytime=(mytime&0xff0f)|(getsw);
+      mytime=(mytime&0xff0f)|(getsw); // change the third digit to the switches input (in binary) 16:X2
   }
   (*reg_porte)++; //set the leds to show the current time in binary
   display_image(96, icon);
