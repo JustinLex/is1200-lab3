@@ -27,9 +27,9 @@ void user_isr( void )
 /* Lab-specific initialization goes here */
 void labinit( void )
 {
-  volatile uint8_t* reg_trise_clr = 0xbf886104; //output-enable register
+  volatile uint8_t* reg_trise_clr = (uint8_t*) 0xbf886104; //output-enable register
   *reg_trise_clr = 0xff;
-  volatile uint32_t* reg_trisd_set = 0xbf8860c8; //input-enable register
+  volatile uint32_t* reg_trisd_set = (uint32_t*) 0xbf8860c8; //input-enable register
   *reg_trisd_set = 0xfd0;
   return;
 }
@@ -37,21 +37,22 @@ void labinit( void )
 /* This function is called repetitively from the main program */
 void labwork( void )
 {
-  volatile uint8_t* reg_porte = 0xbf886110; //IO port E output register
-  delay( 10 );
+  volatile uint8_t* reg_porte = (uint8_t*) 0xbf886110; //IO port E output register
+  int i;
+  for(i = 0; i < 100; i++) {
+    delay( 10 );
+    if((getbtns() & 0x4))
+    mytime=(mytime & 0x0fff)|(getsw()<<12); //change the first digit to the switches input (in binary) X6:42
+    if((getbtns() & 0x2))
+    mytime=(mytime & 0xf0ff)|(getsw()<<8); //change the second digit to the switches input (in binary) 1X:42
+    if((getbtns() & 0x1))
+    mytime=(mytime & 0xff0f)|(getsw()<<4); // change the third digit to the switches input (in binary) 16:X2
+  }
   time2string( textstring, mytime );
   display_string( 3, textstring );
   display_update();
   tick( &mytime );
-  if(getbtns)
-  {
-      if((getbtns&0x4))
-      mytime=(mytime&0xf0ff)|(getsw<<8); //change the first digit to the switches input (in binary) X6:42
-      if((getbtns&0x2))
-      mytime=(mytime&0xf0ff)|(getsw<<4); //change the second digit to the switches input (in binary) 1X:42
-      if((getbtns&0x1))
-      mytime=(mytime&0xff0f)|(getsw); // change the third digit to the switches input (in binary) 16:X2
-  }
+
   (*reg_porte)++; //set the leds to show the current time in binary
   display_image(96, icon);
 }
