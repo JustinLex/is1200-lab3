@@ -26,20 +26,35 @@ char textstring[] = "text, more text, and even more text!";
 /* Interrupt Service Routine */
 void user_isr( void )
 {
-  IFSCLR(0) = 0x100;
-  time2string( textstring, mytime );
-  display_string( 3, textstring );
-  display_update();
-  timeoutcount++;
-  if(timeoutcount >= 10) {
+  if(IFS(0) & 0x800) { //INT2
     tick( &mytime );
-    timeoutcount = 0;
+    tick( &mytime );
+    tick( &mytime );
+    time2string( textstring, mytime );
+    display_string( 3, textstring );
+    display_update();
+    IFSCLR(0) = 0x800;
+
   }
+  
+  if(IFS(0) & 0x100) { //T2
+    timeoutcount++;
+    if(timeoutcount >= 10) {
+      tick( &mytime );
+      timeoutcount = 0;
+    }
+    time2string( textstring, mytime );
+    display_string( 3, textstring );
+    display_update();
+    IFSCLR(0) = 0x100;
+  }
+
   return;
 }
 
 /* Lab-specific initialization goes here */
 void labinit( void ) {
+
   /*initialize timer2*/
   T2CONCLR = 0xFFFF; //disable timer 2 and clear registers if enabled
   T2CONSET = 0x70; //set timer prescale to 256:1 (we need to count to 8M cycles, which is not possible with 1:64 or lower)
@@ -49,6 +64,12 @@ void labinit( void ) {
   IPC(2) = 0x1F; //set timer2 interrupts to highest priority
   IEC(0) = 0x100; //enable timer 2 interrupts
   T2CONSET = 0x8000; //enable timer
+
+  /*initialize External Interrupt 2*/
+  IFSCLR(0) = 0x800; //clear INT2IF
+  IPCSET(2)= 0x1F000000; //set INT2 highest priority
+  IECSET(0) = 0x800; //enable External Interrupt 2 (INT2)
+
   enable_interrupt();
   return;
 }
